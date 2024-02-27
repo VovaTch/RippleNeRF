@@ -1,0 +1,30 @@
+defaults:
+  - _self_
+
+learning:
+  learning_rate: 0.001
+  batch_size: 32
+  weight_decay: 0.0001
+  num_epochs: 100
+  num_workers: 4
+  num_gpus: 1
+
+model:
+  input_dim: 5
+  hidden_dim: 128
+
+loss:
+  aggregator_type: weighted_sum
+  rec_loss:
+    type: rec_loss
+    base_type: mse
+    weight: 1.0
+
+optimizer:
+  type: AdamW
+
+lr_scheduler:
+  type: ReduceLROnPlateau
+  patience: 50
+  factor: 0.1
+  
