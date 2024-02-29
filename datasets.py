@@ -21,7 +21,7 @@ class NerfOnlineDataset(Dataset):
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         return {
             "origin": self.data[index, 0:3],
-            "orientation": self.data[index, 3:6],
+            "direction": self.data[index, 3:6],
             "pixel_value": self.data[index, 6:],
         }
 

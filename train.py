@@ -24,7 +24,7 @@ def main(cfg: DictConfig) -> None:
         use_amp=cfg.learning.use_amp,
     )
 
-    trainer.fit(data_module, nerf_module)
+    trainer.fit(nerf_module, data_module)
 
 
 if __name__ == "__main__":

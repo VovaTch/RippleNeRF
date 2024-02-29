@@ -114,7 +114,7 @@ class NerfLinearModel(nn.Module):
             torch.cat((hidden, emb_d), dim=1)
         )  # h: [batch_size, hidden_dim // 2]
         color = self.block4(hidden)  # c: [batch_size, 3]
-        return {"color": color, "sigmal": sigma}
+        return {"color": color, "sigma": sigma}
 
 
 class NerfModule(L.LightningModule):
@@ -265,7 +265,7 @@ class NerfModule(L.LightningModule):
         loss = F.mse_loss(
             batch["pixel_value"], regenerated_pixel_values, reduction="sum"
         )
-        self.log(f"{phase} total loss", loss.item(), prog_bar=True)
+        self.log(f"{phase}_total_loss", loss.item(), prog_bar=True)
         return loss
 
     @classmethod

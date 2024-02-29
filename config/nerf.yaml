@@ -15,10 +15,10 @@ learning:
   val_split: 0.01
   num_epochs: 100
   num_workers: 4
-  num_gpus: 1
+  num_devices: 2
 
   scheduler_interval: "epoch"
-  loss_monitor: "validation total loss"
+  loss_monitor: "validation_total_loss"
   scheduler_frequency: 1
 
 rendering:
@@ -31,6 +31,9 @@ model:
   hidden_dim: 128
   embedding_dim_pos: 10
   embedding_dim_direction: 4
+
+data:
+  data_path: "data/truck_data/"
 
 lr_scheduler:
   type: ReduceLROnPlateau
