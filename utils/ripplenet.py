@@ -170,9 +170,8 @@ class RippleLinear(nn.Module):
         """
         return batch_ripple_linear_func(
             input,
-            self.out_features,
-            self.weight.unsqueeze(0).repeat((input.shape[0], ...)),
-            self.bias.unsqueeze(0).repeat((input.shape[0], ...)),
+            self.weight.unsqueeze(0).repeat(input.shape[0]),
+            self.bias.unsqueeze(0).repeat(input.shape[0]),
         )
 
     def extra_repr(self) -> str:

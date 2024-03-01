@@ -1,39 +1,5 @@
-from dataclasses import dataclass
-
 import torch
 import torch.nn as nn
-import numpy as np
-
-
-@dataclass
-class Ray:
-    """
-    Describes a ray in 3D space.
-
-    Fields:
-    - origin (np.ndarray): 3D point
-    - direction (np.ndarray): 3D vector
-    """
-
-    origin: np.ndarray
-    direction: np.ndarray
-
-    @property
-    def ray_tensor(self) -> torch.Tensor:
-        """
-        Returns a tensor representation of the ray.
-
-        Returns:
-            torch.Tensor: A tensor representing the ray, consisting of the origin, yaw angle, and pitch angle.
-        """
-        origin_tensor = torch.tensor(self.origin)
-        direction_tensor = torch.tensor(self.direction)
-        yaw_angle = torch.atan2(torch.tensor(direction_tensor[1], direction_tensor[0]))
-        pitch_angle = torch.atan2(
-            torch.tensor(direction_tensor[2]),
-            torch.norm(direction_tensor[1], direction_tensor[0]),
-        )
-        return torch.cat([origin_tensor, yaw_angle, pitch_angle])
 
 
 def compute_accumulated_transmittance(alphas: torch.Tensor) -> torch.Tensor:
@@ -106,7 +72,8 @@ def render_rays(
         num_bins, ray_directions.shape[0], 3
     ).transpose(0, 1)
 
-    outputs = nerf_model(x.reshape(-1, 3), ray_directions.reshape(-1, 3))
+    inputs = {"origin": x.reshape(-1, 3), "direction": ray_directions.reshape(-1, 3)}
+    outputs = nerf_model(inputs)
     colors, sigma = outputs["color"], outputs["sigma"]
     colors = colors.reshape(x.shape)
     sigma = sigma.reshape(x.shape[:-1])

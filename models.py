@@ -269,7 +269,7 @@ class NerfModule(L.LightningModule):
         return loss
 
     @classmethod
-    def from_cfg(cls, cfg: DictConfig) -> Self:
+    def from_cfg(cls, cfg: DictConfig, checkpoint_path: str | None = None) -> Self:
         """
         Create an instance of the class from a configuration object.
 
@@ -286,17 +286,23 @@ class NerfModule(L.LightningModule):
         )  # TODO: this will be replaced
         scheduler_cfg = None if "scheduler" not in cfg else cfg.scheduler
         optimizer_cfg = None if "optimizer" not in cfg else cfg.optimizer
-        return cls(
-            model,
-            scheduler_cfg,
-            optimizer_cfg,
-            cfg.learning.learning_rate,
-            cfg.learning.weight_decay,
-            cfg.learning.save_folder,
-            cfg.learning.scheduler_interval,
-            cfg.learning.loss_monitor,
-            cfg.learning.scheduler_frequency,
-            cfg.rendering.near_plane_distance,
-            cfg.rendering.far_plane_distance,
-            cfg.rendering.num_bins,
-        )
+
+        model_params = {
+            "model": model,
+            "scheduler_cfg": scheduler_cfg,
+            "optimizer_cfg": optimizer_cfg,
+            "learning_rate": cfg.learning.learning_rate,
+            "weight_decay": cfg.learning.weight_decay,
+            "save_folder": cfg.learning.save_folder,
+            "scheduler_interval": cfg.learning.scheduler_interval,
+            "loss_monitor": cfg.learning.loss_monitor,
+            "scheduler_frequency": cfg.learning.scheduler_frequency,
+            "near_plane_distance": cfg.rendering.near_plane_distance,
+            "far_plane_distance": cfg.rendering.far_plane_distance,
+            "num_bins": cfg.rendering.num_bins,
+        }
+
+        if checkpoint_path is None:
+            return cls(**model_params)
+        else:
+            return cls.load_from_checkpoint(checkpoint_path, **model_params)

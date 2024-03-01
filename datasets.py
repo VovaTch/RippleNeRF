@@ -10,15 +10,43 @@ import lightning as L
 
 
 class NerfOnlineDataset(Dataset):
+    """
+    Basic NeRF dataset from two .pkl files from the French guy's mini NeRF implementation.
+    """
+
     def __init__(self, dataset_path: str) -> None:
+        """
+        Initialize the Dataset class.
+
+        Args:
+            dataset_path (str): The path to the dataset.
+        """
         super().__init__()
         self.dataset_path = dataset_path
         self.data = torch.from_numpy(np.load(dataset_path, allow_pickle=True))
 
     def __len__(self) -> int:
+        """
+        Returns the length of the dataset.
+
+        Returns:
+            int: The length of the dataset.
+        """
         return len(self.data)
 
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
+        """
+        Retrieve the item at the given index.
+
+        Args:
+            index (int): The index of the item to retrieve.
+
+        Returns:
+            dict[str, torch.Tensor]: A dictionary containing the following keys:
+                - "origin": A torch.Tensor representing the origin of the item.
+                - "direction": A torch.Tensor representing the direction of the item.
+                - "pixel_value": A torch.Tensor representing the pixel value of the item.
+        """
         return {
             "origin": self.data[index, 0:3],
             "direction": self.data[index, 3:6],
@@ -75,8 +103,11 @@ class NerfOnlineDataModule(L.LightningDataModule):
                 ],
             )
         elif stage == "test":
-            self.test_dataset = NerfOnlineDataset(
-                dataset_path=os.path.join(self.dataset_folder_path, "testing_data.pkl")
+            self.test_dataset = torch.from_numpy(
+                np.load(
+                    os.path.join(self.dataset_folder_path, "testing_data.pkl"),
+                    allow_pickle=True,
+                )
             )
 
     def train_dataloader(self) -> TRAIN_DATALOADERS:
@@ -115,7 +146,7 @@ class NerfOnlineDataModule(L.LightningDataModule):
             DataLoader: A DataLoader object for the test dataset.
         """
         return DataLoader(
-            self.test_dataset,
+            self.test_dataset,  # type: ignore
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,

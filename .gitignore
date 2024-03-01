@@ -165,3 +165,4 @@ data/
 # Pytorch lightning specific
 saved/
 outputs/
+weights/
