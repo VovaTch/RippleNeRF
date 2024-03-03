@@ -1,0 +1,6 @@
+type: RippleNerf
+params:
+  hidden_dim: 32
+  cast_dim: 32
+  num_ripple_layers: 4
+  coordinate_multiplier: 30

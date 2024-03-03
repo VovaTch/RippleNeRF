@@ -8,7 +8,7 @@ from models import NerfModule
 from utils.predictor import build_image
 
 
-CHECKPOINT_PATH = "weights/last.ckpt"
+CHECKPOINT_PATH = "weights/nerf.ckpt"
 
 
 # Temporary; it will be enhanced later
@@ -30,7 +30,7 @@ def main(cfg: DictConfig) -> None:
         cfg.rendering.far_plane_distance,
         data_module.test_dataset,  # type: ignore
         10,
-        img_index=0,
+        img_index=12,
         nb_bins=cfg.rendering.num_bins,
         height=400,
         width=400,

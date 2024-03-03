@@ -1,0 +1,5 @@
+type: NerfLinearModel
+params:
+  hidden_dim: 128
+  embedding_dim_pos: 10
+  embedding_dim_direction: 4

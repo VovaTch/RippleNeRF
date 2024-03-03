@@ -168,11 +168,12 @@ class RippleLinear(nn.Module):
         Returns:
             torch.Tensor: The output tensor.
         """
-        return batch_ripple_linear_func(
-            input,
-            self.weight.unsqueeze(0).repeat(input.shape[0]),
-            self.bias.unsqueeze(0).repeat(input.shape[0]),
-        )
+        # return batch_ripple_linear_func(
+        #     input,
+        #     self.weight.unsqueeze(0).repeat((input.shape[0], 1, 1, 1)),
+        #     self.bias.unsqueeze(0).repeat((input.shape[0], 1, 1)),
+        # )
+        return ripple_linear_func(input, self.out_features, self.weight, self.bias)
 
     def extra_repr(self) -> str:
         """

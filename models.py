@@ -9,7 +9,9 @@ import torch.nn.functional as F
 import lightning as L
 from lightning.pytorch.utilities.types import OptimizerLRScheduler, STEP_OUTPUT
 
+import models
 from utils.geometry import render_rays
+from utils.ripplenet import RippleLinear
 
 
 class NerfLinearModel(nn.Module):
@@ -115,6 +117,56 @@ class NerfLinearModel(nn.Module):
         )  # h: [batch_size, hidden_dim // 2]
         color = self.block4(hidden)  # c: [batch_size, 3]
         return {"color": color, "sigma": sigma}
+
+
+class RippleNerf(nn.Module):
+    def __init__(
+        self,
+        hidden_dim: int,
+        cast_dim: int,
+        num_ripple_layers: int,
+        coordinate_multiplier: float,
+    ) -> None:
+        super().__init__()
+        self.hidden_dim = hidden_dim
+        self.cast_dim = cast_dim
+        self.num_ripple_layers = num_ripple_layers
+        self.coordinate_multiplier = coordinate_multiplier
+
+        if num_ripple_layers < 1:
+            raise ValueError(
+                f"The number of inner ripple layers must be at least 1, got {num_ripple_layers}"
+            )
+
+        self.in_linear = nn.Linear(6, cast_dim)
+
+        if num_ripple_layers == 1:
+            inner_ripple_layers = [RippleLinear(cast_dim, 4)]
+        else:
+            inner_ripple_layers = [RippleLinear(cast_dim, hidden_dim), nn.GELU()]
+            for layer_idx in range(num_ripple_layers - 1):
+                out_dim = hidden_dim if layer_idx < num_ripple_layers - 2 else 4
+                inner_ripple_layers += [
+                    nn.GELU(),
+                    RippleLinear(hidden_dim, out_dim),
+                ]
+        self.bypass = RippleLinear(6, 4)
+        self.res_block = nn.Sequential(*inner_ripple_layers)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(
+        self, origin: torch.Tensor, direction: torch.Tensor
+    ) -> dict[str, torch.Tensor]:
+
+        origin *= self.coordinate_multiplier
+        direction *= self.coordinate_multiplier
+
+        x = torch.cat((origin, direction), dim=1)
+        bypass = self.bypass(x)
+        x = self.in_linear(x)
+        x = self.res_block(x) + bypass
+
+        return {"color": self.sigmoid(x[:, :3]), "sigma": self.sigmoid(x[:, 3])}
 
 
 class NerfModule(L.LightningModule):
@@ -262,9 +314,7 @@ class NerfModule(L.LightningModule):
             self.far_plane_distance,
             self.num_bins,
         )
-        loss = F.mse_loss(
-            batch["pixel_value"], regenerated_pixel_values, reduction="sum"
-        )
+        loss = F.mse_loss(batch["pixel_value"], regenerated_pixel_values)
         self.log(f"{phase}_total_loss", loss.item(), prog_bar=True)
         return loss
 
@@ -279,11 +329,7 @@ class NerfModule(L.LightningModule):
         Returns:
             NerfModule: An instance of the class.
         """
-        model = NerfLinearModel(
-            cfg.model.embedding_dim_pos,
-            cfg.model.embedding_dim_direction,
-            cfg.model.hidden_dim,
-        )  # TODO: this will be replaced
+        model = getattr(models, cfg.model.type)(**cfg.model.params)
         scheduler_cfg = None if "scheduler" not in cfg else cfg.scheduler
         optimizer_cfg = None if "optimizer" not in cfg else cfg.optimizer
 
