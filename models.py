@@ -255,7 +255,7 @@ class NerfModule(L.LightningModule):
             STEP_OUTPUT: The loss value for the step.
         """
         regenerated_pixel_values = render_rays(
-            self.model,
+            self,
             batch["origin"],
             batch["direction"],
             self.near_plane_distance,

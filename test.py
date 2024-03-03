@@ -1,11 +1,12 @@
 import hydra
 from omegaconf import DictConfig
 import torch
+import matplotlib.pyplot as plt
 
 from datasets import NerfOnlineDataModule
 from models import NerfModule
 from utils.predictor import build_image
-import matplotlib.pyplot as plt
+
 
 CHECKPOINT_PATH = "weights/last.ckpt"
 
