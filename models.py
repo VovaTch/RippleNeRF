@@ -164,6 +164,7 @@ class RippleNerf(nn.Module):
         x = torch.cat((origin, direction), dim=1)
         bypass = self.bypass(x)
         x = self.in_linear(x)
+        x = F.gelu(x)
         x = self.res_block(x) + bypass
 
         return {"color": self.sigmoid(x[:, :3]), "sigma": self.sigmoid(x[:, 3])}
@@ -314,7 +315,9 @@ class NerfModule(L.LightningModule):
             self.far_plane_distance,
             self.num_bins,
         )
-        loss = F.mse_loss(batch["pixel_value"], regenerated_pixel_values)
+        loss = F.mse_loss(
+            batch["pixel_value"], regenerated_pixel_values, reduction="sum"
+        )
         self.log(f"{phase}_total_loss", loss.item(), prog_bar=True)
         return loss
 
@@ -343,9 +346,9 @@ class NerfModule(L.LightningModule):
             "scheduler_interval": cfg.learning.scheduler_interval,
             "loss_monitor": cfg.learning.loss_monitor,
             "scheduler_frequency": cfg.learning.scheduler_frequency,
-            "near_plane_distance": cfg.rendering.near_plane_distance,
-            "far_plane_distance": cfg.rendering.far_plane_distance,
-            "num_bins": cfg.rendering.num_bins,
+            "near_plane_distance": cfg.rendering_train.near_plane_distance,
+            "far_plane_distance": cfg.rendering_train.far_plane_distance,
+            "num_bins": cfg.rendering_train.num_bins,
         }
 
         if checkpoint_path is None:

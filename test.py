@@ -26,12 +26,12 @@ def main(cfg: DictConfig) -> None:
 
     img = build_image(
         nerf_module,
-        cfg.rendering.near_plane_distance,
-        cfg.rendering.far_plane_distance,
+        cfg.rendering_eval.near_plane_distance,
+        cfg.rendering_eval.far_plane_distance,
         data_module.test_dataset,  # type: ignore
-        10,
+        1,
         img_index=12,
-        nb_bins=cfg.rendering.num_bins,
+        nb_bins=cfg.rendering_eval.num_bins,
         height=400,
         width=400,
     )

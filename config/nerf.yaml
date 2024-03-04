@@ -3,9 +3,9 @@ defaults:
   - model: ripplenerf 
 
 learning:
-  learning_rate: 0.001
+  learning_rate: 0.0005
   batch_size: 1024
-  weight_decay: 0.0
+  weight_decay: 0.00000001
   beta_ema: 0.9999
   gradient_clip: 0.1
   max_epochs: 100
@@ -22,9 +22,14 @@ learning:
   loss_monitor: "validation_total_loss"
   scheduler_frequency: 1
 
-rendering:
-  near_plane_distance: 0.0
-  far_plane_distance: 1.0
+rendering_train:
+  near_plane_distance: 2.0
+  far_plane_distance: 6.0
+  num_bins: 192
+
+rendering_eval:
+  near_plane_distance: 2.0
+  far_plane_distance: 6.0
   num_bins: 192
 
 data:
