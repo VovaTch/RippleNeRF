@@ -14,6 +14,14 @@ from utils.geometry import render_rays
 from utils.ripplenet import RippleLinear
 
 
+class SineActivation(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.sin(x)
+
+
 class NerfLinearModel(nn.Module):
     """
     NeRF model from the minimal implementation in https://github.com/MaximeVandegar/"""
@@ -23,6 +31,7 @@ class NerfLinearModel(nn.Module):
         embedding_dim_pos: int = 10,
         embedding_dim_direction: int = 4,
         hidden_dim: int = 128,
+        activation: str = "relu",
     ) -> None:
         """
         Initializes the NerfLinearModel.
@@ -34,30 +43,40 @@ class NerfLinearModel(nn.Module):
         """
         super(NerfLinearModel, self).__init__()
 
+        match activation:
+            case "relu":
+                self.activation = nn.ReLU()
+            case "gelu":
+                self.activation = nn.GELU()
+            case "sine":
+                self.activation = SineActivation()
+            case _:
+                raise ValueError(f"Activation {activation} not supported")
+
         self.block1 = nn.Sequential(
             nn.Linear(embedding_dim_pos * 6 + 3, hidden_dim),
-            nn.ReLU(),
+            self.activation,
             nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
+            self.activation,
             nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
+            self.activation,
             nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
+            self.activation,
         )
         # density estimation
         self.block2 = nn.Sequential(
             nn.Linear(embedding_dim_pos * 6 + hidden_dim + 3, hidden_dim),
-            nn.ReLU(),
+            self.activation,
             nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
+            self.activation,
             nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
+            self.activation,
             nn.Linear(hidden_dim, hidden_dim + 1),
         )
         # color estimation
         self.block3 = nn.Sequential(
             nn.Linear(embedding_dim_direction * 6 + hidden_dim + 3, hidden_dim // 2),
-            nn.ReLU(),
+            self.activation,
         )
         self.block4 = nn.Sequential(
             nn.Linear(hidden_dim // 2, 3),
@@ -325,9 +344,7 @@ class NerfModule(L.LightningModule):
             self.far_plane_distance,
             self.num_bins,
         )
-        loss = F.mse_loss(
-            batch["pixel_value"], regenerated_pixel_values, reduction="sum"
-        )
+        loss = F.mse_loss(batch["pixel_value"], regenerated_pixel_values)
         self.log(f"{phase}_total_loss", loss.item(), prog_bar=True)
         return loss
 

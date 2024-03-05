@@ -30,7 +30,7 @@ def main(cfg: DictConfig) -> None:
         cfg.rendering_eval.far_plane_distance,
         data_module.test_dataset,  # type: ignore
         1,
-        img_index=12,
+        img_index=4,
         nb_bins=cfg.rendering_eval.num_bins,
         height=400,
         width=400,
