@@ -138,7 +138,7 @@ class RippleNerf(nn.Module):
                 f"The number of inner ripple layers must be at least 1, got {num_ripple_layers}"
             )
 
-        self.in_linear = nn.Linear(6, cast_dim)
+        self.in_linear = nn.Linear(5, cast_dim)
 
         if num_ripple_layers == 1:
             inner_ripple_layers = [RippleLinear(cast_dim, 4)]
@@ -150,7 +150,7 @@ class RippleNerf(nn.Module):
                     nn.GELU(),
                     RippleLinear(hidden_dim, out_dim),
                 ]
-        self.bypass = RippleLinear(6, 4)
+        self.bypass = RippleLinear(5, 4)
         self.res_block = nn.Sequential(*inner_ripple_layers)
         self.sigmoid = nn.Sigmoid()
 
@@ -159,9 +159,19 @@ class RippleNerf(nn.Module):
     ) -> dict[str, torch.Tensor]:
 
         origin *= self.coordinate_multiplier
-        direction *= self.coordinate_multiplier
+        # direction *= self.coordinate_multiplier
+        yaw = (
+            torch.atan2(direction[:, 0], direction[:, 1]).unsqueeze(-1)
+            * self.coordinate_multiplier
+        )
+        pitch = (
+            torch.atan2(
+                direction[:, 2], torch.sqrt(direction[:, 0] ** 2 + direction[:, 1] ** 2)
+            ).unsqueeze(-1)
+            * self.coordinate_multiplier
+        )
 
-        x = torch.cat((origin, direction), dim=1)
+        x = torch.cat((origin, yaw, pitch), dim=1)
         bypass = self.bypass(x)
         x = self.in_linear(x)
         x = F.gelu(x)

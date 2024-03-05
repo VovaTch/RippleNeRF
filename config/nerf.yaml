@@ -3,8 +3,8 @@ defaults:
   - model: ripplenerf 
 
 learning:
-  learning_rate: 0.0005
-  batch_size: 1024
+  learning_rate: 0.001
+  batch_size: 128
   weight_decay: 0.00000001
   beta_ema: 0.9999
   gradient_clip: 0.1
